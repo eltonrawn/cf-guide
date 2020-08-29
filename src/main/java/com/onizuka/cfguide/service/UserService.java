@@ -3,6 +3,7 @@ package com.onizuka.cfguide.service;
 import com.onizuka.cfguide.dto.UserSubmissionByDateRequest;
 import com.onizuka.cfguide.model.Submission;
 import com.onizuka.cfguide.model.SubmissionList;
+import com.onizuka.cfguide.util.TimeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -23,15 +24,11 @@ public class UserService {
 
         SubmissionList result = restTemplate.getForObject(uri, SubmissionList.class);
 
-        Instant now = Instant.now();
-        Instant yesterday = now.minus(userSubmissionByDateRequest.getNoOfDays(), ChronoUnit.DAYS);
-        Long epochSecond = yesterday.getEpochSecond();
+        Long epochSecond = TimeUtil.getEpochBeforeNDays(userSubmissionByDateRequest.getNoOfDays());
 
         SubmissionList filteredResult = new SubmissionList();
 
         for(Submission submission: result.getResult()) {
-//            System.out.println(submission.getVerdict());
-//            System.out.println(submission.getCreationTimeSeconds());
             if(submission.getCreationTimeSeconds() > epochSecond) {
                 filteredResult.getResult().add(submission);
             }
@@ -39,9 +36,6 @@ public class UserService {
                 break;
             }
         }
-//        System.out.println(yesterday.getEpochSecond());
-//        System.out.println(backCount);
-
         return filteredResult;
     }
 
