@@ -7,9 +7,12 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class UserController {
+    public UserService userService;
 
     @Autowired
-    public UserService userService;
+    UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping("/user/submission/date/count")
     public Long getSubmissionByDateCount(@RequestBody UserSubmissionByDateRequest userSubmissionByDateRequest) {

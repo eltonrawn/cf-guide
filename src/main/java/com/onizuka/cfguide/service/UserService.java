@@ -15,8 +15,12 @@ import java.util.List;
 @Service
 public class UserService {
 
-    @Autowired
     RestTemplate restTemplate;
+
+    @Autowired
+    UserService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
     public SubmissionList getSubmissionByDate(UserSubmissionByDateRequest userSubmissionByDateRequest) {
         String uri = String.format("https://codeforces.com/api/user.status?handle=%s&from=1&count=100",
