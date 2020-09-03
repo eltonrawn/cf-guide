@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserSubmissionByDateRequest {
-    String handle;
-    Long noOfDays;
+public class UserSubmissionByDateResponse {
+    Long solveCount;
 }
