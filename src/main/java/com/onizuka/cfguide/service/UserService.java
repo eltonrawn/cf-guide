@@ -2,12 +2,15 @@ package com.onizuka.cfguide.service;
 
 import com.onizuka.cfguide.dto.RestApiResponse;
 import com.onizuka.cfguide.dto.UserSubmissionByDateRequest;
+import com.onizuka.cfguide.dto.UserSubmissionByDateResponse;
 import com.onizuka.cfguide.model.Submission;
 import com.onizuka.cfguide.model.SubmissionList;
 import com.onizuka.cfguide.util.HTTPUtil;
 import com.onizuka.cfguide.util.TimeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
 
 @Service
 public class UserService {
@@ -19,29 +22,40 @@ public class UserService {
         this.httpUtil = httpUtil;
     }
 
-    private SubmissionList getSubmissionByDate(UserSubmissionByDateRequest userSubmissionByDateRequest) {
+    public UserSubmissionByDateResponse getSubmissionByDate(UserSubmissionByDateRequest userSubmissionByDateRequest) {
         String uri = getUserInfoFetchURI(userSubmissionByDateRequest);
         RestApiResponse httpResponse = httpUtil.get(uri, SubmissionList.class);
         SubmissionList result = (SubmissionList) httpResponse.getResponseBody();
-        Long epochSecond = TimeUtil.getEpochBeforeNDays(userSubmissionByDateRequest.getNoOfDays());
-        SubmissionList filteredResult = new SubmissionList();
 
-        for (Submission submission : result.getResult()) {
-            if (submission.getCreationTimeSeconds() > epochSecond) {
-                filteredResult.getResult().add(submission);
-            } else {
-                break;
+        Long days = 1L;
+        Long epochSecond = TimeUtil.getEpochBeforeNDays(days);
+        ArrayList<Long> countArray = new ArrayList<>();
+        int cnt = 0;
+        int totalSolveCount = 0;
+
+        int i = 0;
+        while(i < result.getResult().size()) {
+            Submission submission = result.getResult().get(i);
+            if (submission.getCreationTimeSeconds() >= epochSecond) {
+                cnt++;
+                totalSolveCount++;
+                i++;
+            }
+            else {
+                countArray.add((long) cnt);
+                days++;
+                if(days > userSubmissionByDateRequest.getNoOfDays()) {
+                    break;
+                }
+                cnt = 0;
+                epochSecond = TimeUtil.getEpochBeforeNDays(days);
             }
         }
-        return filteredResult;
+        return new UserSubmissionByDateResponse((long) totalSolveCount, countArray);
     }
 
     private String getUserInfoFetchURI(UserSubmissionByDateRequest userSubmissionByDateRequest) {
         return String.format("https://codeforces.com/api/user.status?handle=%s&from=1&count=100",
                 userSubmissionByDateRequest.getHandle());
-    }
-
-    public Long getSubmissionByDateCount(UserSubmissionByDateRequest userSubmissionByDateRequest) {
-        return (long) getSubmissionByDate(userSubmissionByDateRequest).getResult().size();
     }
 }

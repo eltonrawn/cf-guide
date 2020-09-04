@@ -18,8 +18,7 @@ public class UserController {
     @GetMapping("/users/{handle}/submissions/count")
     public UserSubmissionByDateResponse getSubmissionByDateCount(@PathVariable String handle,
                                          @RequestParam(name = "days", defaultValue = "1") Long days) {
-        return new UserSubmissionByDateResponse(
-                userService.getSubmissionByDateCount(new UserSubmissionByDateRequest(handle, days)));
+        return userService.getSubmissionByDate(new UserSubmissionByDateRequest(handle, days));
     }
 
 }
