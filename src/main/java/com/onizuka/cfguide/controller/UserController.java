@@ -6,6 +6,8 @@ import com.onizuka.cfguide.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+// TODO Better to use web config class to enable cross origin
+@CrossOrigin
 @RestController
 public class UserController {
     private final UserService userService;
