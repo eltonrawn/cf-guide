@@ -27,22 +27,23 @@ public class UserService {
         RestApiResponse httpResponse = httpUtil.get(uri, SubmissionList.class);
         SubmissionList result = (SubmissionList) httpResponse.getResponseBody();
 
-        Long days = 1L;
-        Long epochSecond = TimeUtil.getEpochBeforeNDays(days);
+        long days = 0L;
+        long epochSecond = TimeUtil.getEpochBeforeNDays(days);
         ArrayList<Long> countArray = new ArrayList<>();
-        int cnt = 0;
+        long cnt = 0;
         int totalSolveCount = 0;
 
         int i = 0;
         while(i < result.getResult().size()) {
             Submission submission = result.getResult().get(i);
-            if (submission.getCreationTimeSeconds() >= epochSecond) {
+            if (Boolean.TRUE
+                    .equals(TimeUtil.isSameDay(submission.getCreationTimeSeconds() * 1000, epochSecond * 1000))) {
                 cnt++;
                 totalSolveCount++;
                 i++;
             }
             else {
-                countArray.add((long) cnt);
+                countArray.add(cnt);
                 days++;
                 if(days > userSubmissionByDateRequest.getNoOfDays()) {
                     break;
