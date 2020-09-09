@@ -11,6 +11,7 @@ public class SingleDaySubmission {
     String date;
     long totalSubmission;
     long acCount;
+    long uniqueAcCount;
     long waCount;
     long tleCount;
     long mleCount;

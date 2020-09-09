@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 public class UserService {
@@ -34,6 +36,7 @@ public class UserService {
         SingleDaySubmission singleDaySubmission = new SingleDaySubmission();
         singleDaySubmission.setDate(TimeUtil.getStringfromEpoch(epochSecond * 1000));
         int totalSubmissionCount = 0;
+        Set<String> acIds = new HashSet<>();
 
         int i = 0;
         while(i < result.getResult().size()) {
@@ -43,6 +46,7 @@ public class UserService {
 
                 if(submission.getVerdict().equals("OK")) {
                     singleDaySubmission.setAcCount(singleDaySubmission.getAcCount() + 1);
+                    acIds.add(submission.getProblem().getContestId() + "-" + submission.getProblem().getIndex());
                 } else if(submission.getVerdict().equals("WRONG_ANSWER")) {
                     singleDaySubmission.setWaCount(singleDaySubmission.getWaCount() + 1);
                 } else if(submission.getVerdict().equals("TIME_LIMIT_EXCEEDED")) {
@@ -55,11 +59,13 @@ public class UserService {
                 i++;
             }
             else {
+                singleDaySubmission.setUniqueAcCount(acIds.size());
                 countArray.add(singleDaySubmission);
                 days++;
                 if(days > userSubmissionByDateRequest.getNoOfDays()) {
                     break;
                 }
+                acIds.clear();
                 epochSecond = TimeUtil.getEpochBeforeNDays(days);
                 singleDaySubmission = new SingleDaySubmission();
                 singleDaySubmission.setDate(TimeUtil.getStringfromEpoch(epochSecond * 1000));
