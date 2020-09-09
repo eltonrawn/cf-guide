@@ -1,6 +1,7 @@
 package com.onizuka.cfguide.service;
 
 import com.onizuka.cfguide.dto.RestApiResponse;
+import com.onizuka.cfguide.dto.SingleDaySubmission;
 import com.onizuka.cfguide.dto.UserSubmissionByDateRequest;
 import com.onizuka.cfguide.dto.UserSubmissionByDateResponse;
 import com.onizuka.cfguide.model.Submission;
@@ -29,30 +30,42 @@ public class UserService {
 
         long days = 0L;
         long epochSecond = TimeUtil.getEpochBeforeNDays(days);
-        ArrayList<Long> countArray = new ArrayList<>();
-        long cnt = 0;
-        int totalSolveCount = 0;
+        ArrayList<SingleDaySubmission> countArray = new ArrayList<>();
+        SingleDaySubmission singleDaySubmission = new SingleDaySubmission();
+        singleDaySubmission.setDate(TimeUtil.getStringfromEpoch(epochSecond * 1000));
+        int totalSubmissionCount = 0;
 
         int i = 0;
         while(i < result.getResult().size()) {
             Submission submission = result.getResult().get(i);
             if (Boolean.TRUE
                     .equals(TimeUtil.isSameDay(submission.getCreationTimeSeconds() * 1000, epochSecond * 1000))) {
-                cnt++;
-                totalSolveCount++;
+
+                if(submission.getVerdict().equals("OK")) {
+                    singleDaySubmission.setAcCount(singleDaySubmission.getAcCount() + 1);
+                } else if(submission.getVerdict().equals("WRONG_ANSWER")) {
+                    singleDaySubmission.setWaCount(singleDaySubmission.getWaCount() + 1);
+                } else if(submission.getVerdict().equals("TIME_LIMIT_EXCEEDED")) {
+                    singleDaySubmission.setTleCount(singleDaySubmission.getTleCount() + 1);
+                } else if(submission.getVerdict().equals("MEMORY_LIMIT_EXCEEDED")) {
+                    singleDaySubmission.setMleCount(singleDaySubmission.getMleCount() + 1);
+                }
+                singleDaySubmission.setTotalSubmission(singleDaySubmission.getTotalSubmission() + 1);
+                totalSubmissionCount++;
                 i++;
             }
             else {
-                countArray.add(cnt);
+                countArray.add(singleDaySubmission);
                 days++;
                 if(days > userSubmissionByDateRequest.getNoOfDays()) {
                     break;
                 }
-                cnt = 0;
                 epochSecond = TimeUtil.getEpochBeforeNDays(days);
+                singleDaySubmission = new SingleDaySubmission();
+                singleDaySubmission.setDate(TimeUtil.getStringfromEpoch(epochSecond * 1000));
             }
         }
-        return new UserSubmissionByDateResponse((long) totalSolveCount, countArray);
+        return new UserSubmissionByDateResponse((long) totalSubmissionCount, countArray);
     }
 
     private String getUserInfoFetchURI(UserSubmissionByDateRequest userSubmissionByDateRequest) {

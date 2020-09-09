@@ -4,12 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserSubmissionByDateResponse {
-    Long totalSubmissionCount;
-    ArrayList<SingleDaySubmission> countAra = new ArrayList<>();
+public class SingleDaySubmission {
+    String date;
+    long totalSubmission;
+    long acCount;
+    long waCount;
+    long tleCount;
+    long mleCount;
 }

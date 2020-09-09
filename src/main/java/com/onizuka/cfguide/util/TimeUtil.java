@@ -15,9 +15,13 @@ public final class TimeUtil {
      * parameters should be given in milliseconds
      * */
     public static boolean isSameDay(Long day1, Long day2) {
-        String sday1 = new SimpleDateFormat("dd/MM/yyyy").format(new Date(day1));
-        String sday2 = new SimpleDateFormat("dd/MM/yyyy").format(new Date(day2));
+        return getStringfromEpoch(day1).equals(getStringfromEpoch(day2));
+    }
 
-        return sday1.equals(sday2);
+    /**
+     * parameters should be given in milliseconds
+     * */
+    public static String getStringfromEpoch(Long date) {
+        return new SimpleDateFormat("dd/MM/yyyy").format(new Date(date));
     }
 }
