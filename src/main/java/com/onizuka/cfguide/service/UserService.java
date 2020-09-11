@@ -74,7 +74,7 @@ public class UserService {
         return new UserSubmissionByDateResponse((long) totalSubmissionCount, countArray);
     }
 
-    private String getUserInfoFetchURI(UserSubmissionByDateRequest userSubmissionByDateRequest) {
+    String getUserInfoFetchURI(UserSubmissionByDateRequest userSubmissionByDateRequest) {
         return String.format("https://codeforces.com/api/user.status?handle=%s&from=1&count=100",
                 userSubmissionByDateRequest.getHandle());
     }
