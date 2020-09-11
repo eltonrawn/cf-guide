@@ -6,6 +6,7 @@ import com.onizuka.cfguide.dto.UserSubmissionByDateRequest;
 import com.onizuka.cfguide.dto.UserSubmissionByDateResponse;
 import com.onizuka.cfguide.model.SubmissionList;
 import com.onizuka.cfguide.util.HTTPUtil;
+import com.onizuka.cfguide.util.TimeUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,7 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest
+@SpringBootTest(classes = {TimeUtil.class})
 public class UserServiceTest {
     @MockBean
     HTTPUtil httpUtil;
