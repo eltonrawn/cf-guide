@@ -12,8 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -28,50 +30,59 @@ public class UserService {
     public UserSubmissionByDateResponse getSubmissionByDate(UserSubmissionByDateRequest userSubmissionByDateRequest) {
         String uri = getUserInfoFetchURI(userSubmissionByDateRequest);
         RestApiResponse httpResponse = httpUtil.get(uri, SubmissionList.class);
-        SubmissionList result = (SubmissionList) httpResponse.getResponseBody();
+        List<Submission> result = ((SubmissionList) httpResponse.getResponseBody()).getResult();
 
-        long days = 0L;
-        long epochSecond = TimeUtil.getEpochBeforeNDays(days);
-        ArrayList<SingleDaySubmission> countArray = new ArrayList<>();
-        SingleDaySubmission singleDaySubmission = new SingleDaySubmission();
-        singleDaySubmission.setDate(TimeUtil.getStringfromEpoch(epochSecond * 1000));
-        int totalSubmissionCount = 0;
-        Set<String> acIds = new HashSet<>();
+        Map<String, Long> submissionCount = filteredSubmissionVerdictCount(result, p -> true);
+        Map<String, Long> acCount = filteredSubmissionVerdictCount(result, p -> p.getVerdict().equals("OK"));
+        Map<String, Long> waCount = filteredSubmissionVerdictCount(result, p -> p.getVerdict().equals("WRONG_ANSWER"));
+        Map<String, Long> mleCount = filteredSubmissionVerdictCount(result, p -> p.getVerdict().equals("MEMORY_LIMIT_EXCEEDED"));
+        Map<String, Long> tleCount = filteredSubmissionVerdictCount(result, p -> p.getVerdict().equals("TIME_LIMIT_EXCEEDED"));
+        Map<String, Long> uniqueAcCount = filteredUniqueSubmissionVerdictCount(result, p -> p.getVerdict().equals("OK"));
 
-        int i = 0;
-        while(i < result.getResult().size()) {
-            Submission submission = result.getResult().get(i);
-            if (Boolean.TRUE
-                    .equals(TimeUtil.isSameDay(submission.getCreationTimeSeconds() * 1000, epochSecond * 1000))) {
+        ArrayList<SingleDaySubmission> singleDaySubmissions = new ArrayList<>();
+        long totalSubmissionCount = 0;
 
-                if(submission.getVerdict().equals("OK")) {
-                    singleDaySubmission.setAcCount(singleDaySubmission.getAcCount() + 1);
-                    acIds.add(submission.getProblem().getContestId() + "-" + submission.getProblem().getIndex());
-                } else if(submission.getVerdict().equals("WRONG_ANSWER")) {
-                    singleDaySubmission.setWaCount(singleDaySubmission.getWaCount() + 1);
-                } else if(submission.getVerdict().equals("TIME_LIMIT_EXCEEDED")) {
-                    singleDaySubmission.setTleCount(singleDaySubmission.getTleCount() + 1);
-                } else if(submission.getVerdict().equals("MEMORY_LIMIT_EXCEEDED")) {
-                    singleDaySubmission.setMleCount(singleDaySubmission.getMleCount() + 1);
-                }
-                singleDaySubmission.setTotalSubmission(singleDaySubmission.getTotalSubmission() + 1);
-                totalSubmissionCount++;
-                i++;
-            }
-            else {
-                singleDaySubmission.setUniqueAcCount(acIds.size());
-                countArray.add(singleDaySubmission);
-                days++;
-                if(days > userSubmissionByDateRequest.getNoOfDays()) {
-                    break;
-                }
-                acIds.clear();
-                epochSecond = TimeUtil.getEpochBeforeNDays(days);
-                singleDaySubmission = new SingleDaySubmission();
-                singleDaySubmission.setDate(TimeUtil.getStringfromEpoch(epochSecond * 1000));
-            }
+        for (int days = 0; days < userSubmissionByDateRequest.getNoOfDays(); days++) {
+            String date = TimeUtil.getStringfromEpoch(TimeUtil.getEpochBeforeNDays(days) * 1000);
+            SingleDaySubmission singleDaySubmission = new SingleDaySubmission();
+            singleDaySubmission.setDate(date);
+
+            singleDaySubmission.setTotalSubmission(submissionCount.getOrDefault(date, 0L));
+            singleDaySubmission.setAcCount(acCount.getOrDefault(date, 0L));
+            singleDaySubmission.setWaCount(waCount.getOrDefault(date, 0L));
+            singleDaySubmission.setMleCount(mleCount.getOrDefault(date, 0L));
+            singleDaySubmission.setTleCount(tleCount.getOrDefault(date, 0L));
+            singleDaySubmission.setUniqueAcCount(uniqueAcCount.getOrDefault(date, 0L));
+
+            singleDaySubmissions.add(singleDaySubmission);
+            totalSubmissionCount += submissionCount.getOrDefault(date, 0L);
         }
-        return new UserSubmissionByDateResponse((long) totalSubmissionCount, countArray);
+
+        return new UserSubmissionByDateResponse(totalSubmissionCount, singleDaySubmissions);
+    }
+
+    Map<String, Long> filteredSubmissionVerdictCount(List<Submission> result, Predicate<Submission> predicate) {
+        return result
+                .stream()
+                .filter(predicate)
+                .collect((Collectors
+                        .groupingBy(p -> TimeUtil.getStringfromEpoch(p.getCreationTimeSeconds() * 1000),
+                                Collectors.counting())
+                ));
+    }
+
+    Map<String, Long> filteredUniqueSubmissionVerdictCount(List<Submission> result, Predicate<Submission> predicate) {
+        return result
+                .stream()
+                .filter(predicate)
+                .collect((Collectors
+                        .groupingBy(p -> TimeUtil.getStringfromEpoch(p.getCreationTimeSeconds() * 1000),
+                                Collectors.collectingAndThen(Collectors.mapping(p -> String.format(
+                                        "%s-%s", p.getProblem().getContestId(), p.getProblem().getIndex()),
+                                        Collectors.toSet()), p -> (long) (p.size()))
+                        )));
+
+
     }
 
     String getUserInfoFetchURI(UserSubmissionByDateRequest userSubmissionByDateRequest) {
