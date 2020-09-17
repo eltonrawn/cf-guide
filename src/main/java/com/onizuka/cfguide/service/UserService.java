@@ -34,12 +34,18 @@ public class UserService {
         String validity = TimeUtil.getStringfromEpoch(
                 TimeUtil.getEpochBeforeNDays(userSubmissionByDateRequest.getNoOfDays()) * 1000
         );
-
         submissions = submissions.stream()
                 .filter(submission -> validity.compareTo(submission.getDate()) <= 0)
                 .collect(Collectors.toList());
+        return UserSubmissionByDateResponse.builder()
+                .totalSubmissionCount(submissions.size())
+                .countAra(getSingleDaySubmissions(submissions, Math.toIntExact(userSubmissionByDateRequest.getNoOfDays())))
+                .solveCountByType(getSolveCountByType(submissions))
+                .build();
+    }
 
-        Map<String, Integer> solveCountByType = submissions.stream()
+    private Map<String, Integer> getSolveCountByType(List<Submission> submissions) {
+        return submissions.stream()
                 .filter(submission -> "OK".equals(submission.getVerdict()))
                 .collect(Collectors.groupingBy(Submission::getProblemType))
                 .entrySet()
@@ -50,15 +56,6 @@ public class UserService {
                                 .collect(Collectors.toSet())
                                 .size()
                 ));
-
-        List<SingleDaySubmission> singleDaySubmissions =
-                getSingleDaySubmissions(submissions, Math.toIntExact(userSubmissionByDateRequest.getNoOfDays()));
-
-        return UserSubmissionByDateResponse.builder()
-                .totalSubmissionCount(submissions.size())
-                .countAra(singleDaySubmissions)
-                .solveCountByType(solveCountByType)
-                .build();
     }
 
     private List<SingleDaySubmission> getSingleDaySubmissions(List<Submission> submissions, int days) {
@@ -74,7 +71,7 @@ public class UserService {
                     .collect(Collectors.toSet())
                     .size();
             var total = value.size();
-            acCountByDate.put(key, (long)acCount);
+            acCountByDate.put(key, (long) acCount);
             totSubCountByDate.put(key, (long) total);
         });
 
