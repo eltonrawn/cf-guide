@@ -42,7 +42,14 @@ public class UserService {
         Map<String, Integer> solveCountByType = submissions.stream()
                 .filter(submission -> "OK".equals(submission.getVerdict()))
                 .collect(Collectors.groupingBy(Submission::getProblemType))
-                .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().size()));
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        entry -> entry.getValue().stream()
+                                .map(this::makeUniqueSubmissionIDForProblem)
+                                .collect(Collectors.toSet())
+                                .size()
+                ));
 
         List<SingleDaySubmission> singleDaySubmissions =
                 getSingleDaySubmissions(submissions, Math.toIntExact(userSubmissionByDateRequest.getNoOfDays()));
@@ -60,9 +67,14 @@ public class UserService {
         var totSubCountByDate = new HashMap<String, Long>();
 
         cgSubByDate.forEach((key, value) -> {
-            var acCount = value.stream().filter(submission -> "OK".equals(submission.getVerdict())).count();
+            var acCount = value
+                    .stream()
+                    .filter(submission -> "OK".equals(submission.getVerdict()))
+                    .map(this::makeUniqueSubmissionIDForProblem)
+                    .collect(Collectors.toSet())
+                    .size();
             var total = value.size();
-            acCountByDate.put(key, acCount);
+            acCountByDate.put(key, (long)acCount);
             totSubCountByDate.put(key, (long) total);
         });
 
@@ -76,6 +88,10 @@ public class UserService {
                             .build();
                 })
                 .collect(Collectors.toList());
+    }
+
+    private String makeUniqueSubmissionIDForProblem(Submission submission) {
+        return submission.getContestId() + submission.getProblem().getIndex();
     }
 
     private List<Submission> getUserSubmissions(UserSubmissionByDateRequest userSubmissionByDateRequest) {
