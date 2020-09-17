@@ -1,18 +1,13 @@
 package com.onizuka.cfguide.dto;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
+// TODO uniqueAcCount is false naming. kept it to not break front end code
+@Builder
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class SingleDaySubmission {
     String date;
-    long totalSubmission;
-    long acCount;
-    long uniqueAcCount;
-    long waCount;
-    long tleCount;
-    long mleCount;
+    Long totalSubmission;
+    Long uniqueAcCount;
 }

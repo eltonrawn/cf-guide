@@ -1,0 +1,126 @@
+{
+  "status": "OK",
+  "result": [
+    {
+      "id": 1415,
+      "name": "Technocup 2021 - Elimination Round 3",
+      "type": "CF",
+      "phase": "BEFORE",
+      "frozen": false,
+      "durationSeconds": 7200,
+      "startTimeSeconds": 1606633500,
+      "relativeTimeSeconds": -6313896
+    },
+    {
+      "id": 1408,
+      "name": "Codeforces Round X",
+      "type": "CF",
+      "phase": "BEFORE",
+      "frozen": false,
+      "durationSeconds": 9000,
+      "startTimeSeconds": 1601476500,
+      "relativeTimeSeconds": -1156896
+    },
+    {
+      "id": 1416,
+      "name": "Codeforces Round #673 (Div. 1, based on Technocup 2021 Elimination Round 1)",
+      "type": "CF",
+      "phase": "BEFORE",
+      "frozen": false,
+      "durationSeconds": 7200,
+      "startTimeSeconds": 1601219100,
+      "relativeTimeSeconds": -899496
+    },
+    {
+      "id": 1417,
+      "name": "Codeforces Round #673 (Div. 2, based on Technocup 2021 Elimination Round 1)",
+      "type": "CF",
+      "phase": "BEFORE",
+      "frozen": false,
+      "durationSeconds": 7200,
+      "startTimeSeconds": 1601219100,
+      "relativeTimeSeconds": -899496
+    },
+    {
+      "id": 1420,
+      "name": "Codeforces Round #672 (Div. 2)",
+      "type": "CF",
+      "phase": "BEFORE",
+      "frozen": false,
+      "durationSeconds": 7200,
+      "startTimeSeconds": 1600958100,
+      "relativeTimeSeconds": -638496
+    },
+    {
+
+      "id": 1418,
+      "name": "Educational Codeforces Round 95 (Rated for Div. 2)",
+      "type": "ICPC",
+      "phase": "FINISHED",
+      "frozen": false,
+      "durationSeconds": 7200,
+      "startTimeSeconds": 1600094100,
+      "relativeTimeSeconds": 225504
+    },
+    {
+      "id": 1407,
+      "name": "Codeforces Round #669 (Div. 2)",
+      "type": "CF",
+      "phase": "FINISHED",
+      "frozen": false,
+      "durationSeconds": 7200,
+      "startTimeSeconds": 1599575700,
+      "relativeTimeSeconds": 743904
+    },
+    {
+      "id": 1404,
+      "name": "Codeforces Round #668 (Div. 1)",
+      "type": "CF",
+      "phase": "FINISHED",
+      "frozen": false,
+      "durationSeconds": 7200,
+      "startTimeSeconds": 1599402900,
+      "relativeTimeSeconds": 916704
+    },
+    {
+      "id": 1409,
+      "name": "Codeforces Round #667 (Div. 3)",
+      "type": "ICPC",
+      "phase": "FINISHED",
+      "frozen": false,
+      "durationSeconds": 7200,
+      "startTimeSeconds": 1599230100,
+      "relativeTimeSeconds": 1089504
+    },
+    {
+      "id": 1284,
+      "name": "Hello 2020",
+      "type": "CF",
+      "phase": "FINISHED",
+      "frozen": false,
+      "durationSeconds": 9000,
+      "startTimeSeconds": 1578139500,
+      "relativeTimeSeconds": 22180104
+    },
+    {
+      "id": 1270,
+      "name": "Good Bye 2019",
+      "type": "CF",
+      "phase": "FINISHED",
+      "frozen": false,
+      "durationSeconds": 10800,
+      "startTimeSeconds": 1577628300,
+      "relativeTimeSeconds": 22691304
+    },
+    {
+      "id": 1266,
+      "name": "Codeforces Global Round 6",
+      "type": "CF",
+      "phase": "FINISHED",
+      "frozen": false,
+      "durationSeconds": 9000,
+      "startTimeSeconds": 1576595100,
+      "relativeTimeSeconds": 23724504
+    }
+  ]
+}

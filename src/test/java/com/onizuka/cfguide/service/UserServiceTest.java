@@ -6,7 +6,6 @@ import com.onizuka.cfguide.dto.UserSubmissionByDateRequest;
 import com.onizuka.cfguide.dto.UserSubmissionByDateResponse;
 import com.onizuka.cfguide.model.SubmissionList;
 import com.onizuka.cfguide.util.HTTPUtil;
-import com.onizuka.cfguide.util.TimeUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,8 +30,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = {TimeUtil.class})
+@SpringBootTest
 public class UserServiceTest {
+    @MockBean
+    ContestInfoService contestInfoService;
     @MockBean
     HTTPUtil httpUtil;
     @Captor
@@ -41,7 +42,7 @@ public class UserServiceTest {
 
     @Before
     public void init() throws IOException, URISyntaxException {
-        userService = Mockito.spy(new UserService(httpUtil));
+        userService = Mockito.spy(new UserService(httpUtil, contestInfoService));
         Path path = Paths.get(Objects.requireNonNull(getClass().getClassLoader().getResource("mockCfResponseForSubByDate.json")).toURI());
         String cfMockResponse = Files.readString(path);
         SubmissionList submissionList = new Gson().fromJson(cfMockResponse, SubmissionList.class);

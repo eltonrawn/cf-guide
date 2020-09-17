@@ -22,6 +22,6 @@ public final class TimeUtil {
      * parameters should be given in milliseconds
      * */
     public static String getStringfromEpoch(Long date) {
-        return new SimpleDateFormat("dd/MM/yyyy").format(new Date(date));
+        return new SimpleDateFormat("yyyy/MM/dd").format(new Date(date));
     }
 }

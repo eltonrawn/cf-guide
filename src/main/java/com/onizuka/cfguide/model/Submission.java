@@ -17,4 +17,6 @@ public class Submission {
     Long timeConsumedMillis;
     Long memoryConsumedBytes;
     Double points;
+    String date;
+    String problemType;
 }

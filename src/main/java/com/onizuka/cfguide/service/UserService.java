@@ -11,81 +11,89 @@ import com.onizuka.cfguide.util.TimeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 public class UserService {
 
     private final HTTPUtil httpUtil;
+    private final ContestInfoService contestInfoService;
 
     @Autowired
-    UserService(HTTPUtil httpUtil) {
+    UserService(HTTPUtil httpUtil, ContestInfoService contestInfoService) {
         this.httpUtil = httpUtil;
+        this.contestInfoService = contestInfoService;
     }
 
     public UserSubmissionByDateResponse getSubmissionByDate(UserSubmissionByDateRequest userSubmissionByDateRequest) {
-        String uri = getUserInfoFetchURI(userSubmissionByDateRequest);
-        RestApiResponse httpResponse = httpUtil.get(uri, SubmissionList.class);
-        List<Submission> result = ((SubmissionList) httpResponse.getResponseBody()).getResult();
+        List<Submission> submissions = getUserSubmissions(userSubmissionByDateRequest);
+        String validity = TimeUtil.getStringfromEpoch(
+                TimeUtil.getEpochBeforeNDays(userSubmissionByDateRequest.getNoOfDays()) * 1000
+        );
 
-        Map<String, Long> submissionCount = filteredSubmissionVerdictCount(result, p -> true);
-        Map<String, Long> acCount = filteredSubmissionVerdictCount(result, p -> p.getVerdict().equals("OK"));
-        Map<String, Long> waCount = filteredSubmissionVerdictCount(result, p -> p.getVerdict().equals("WRONG_ANSWER"));
-        Map<String, Long> mleCount = filteredSubmissionVerdictCount(result, p -> p.getVerdict().equals("MEMORY_LIMIT_EXCEEDED"));
-        Map<String, Long> tleCount = filteredSubmissionVerdictCount(result, p -> p.getVerdict().equals("TIME_LIMIT_EXCEEDED"));
-        Map<String, Long> uniqueAcCount = filteredUniqueSubmissionVerdictCount(result, p -> p.getVerdict().equals("OK"));
+        submissions = submissions.stream()
+                .filter(submission -> validity.compareTo(submission.getDate()) <= 0)
+                .collect(Collectors.toList());
 
-        ArrayList<SingleDaySubmission> singleDaySubmissions = new ArrayList<>();
-        long totalSubmissionCount = 0;
+        Map<String, Integer> solveCountByType = submissions.stream()
+                .filter(submission -> "OK".equals(submission.getVerdict()))
+                .collect(Collectors.groupingBy(Submission::getProblemType))
+                .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().size()));
 
-        for (int days = 0; days < userSubmissionByDateRequest.getNoOfDays(); days++) {
-            String date = TimeUtil.getStringfromEpoch(TimeUtil.getEpochBeforeNDays(days) * 1000);
-            SingleDaySubmission singleDaySubmission = new SingleDaySubmission();
-            singleDaySubmission.setDate(date);
+        List<SingleDaySubmission> singleDaySubmissions =
+                getSingleDaySubmissions(submissions, Math.toIntExact(userSubmissionByDateRequest.getNoOfDays()));
 
-            singleDaySubmission.setTotalSubmission(submissionCount.getOrDefault(date, 0L));
-            singleDaySubmission.setAcCount(acCount.getOrDefault(date, 0L));
-            singleDaySubmission.setWaCount(waCount.getOrDefault(date, 0L));
-            singleDaySubmission.setMleCount(mleCount.getOrDefault(date, 0L));
-            singleDaySubmission.setTleCount(tleCount.getOrDefault(date, 0L));
-            singleDaySubmission.setUniqueAcCount(uniqueAcCount.getOrDefault(date, 0L));
-
-            singleDaySubmissions.add(singleDaySubmission);
-            totalSubmissionCount += submissionCount.getOrDefault(date, 0L);
-        }
-
-        return new UserSubmissionByDateResponse(totalSubmissionCount, singleDaySubmissions);
+        return UserSubmissionByDateResponse.builder()
+                .totalSubmissionCount(submissions.size())
+                .countAra(singleDaySubmissions)
+                .solveCountByType(solveCountByType)
+                .build();
     }
 
-    Map<String, Long> filteredSubmissionVerdictCount(List<Submission> result, Predicate<Submission> predicate) {
-        return result
-                .stream()
-                .filter(predicate)
-                .collect((Collectors
-                        .groupingBy(p -> TimeUtil.getStringfromEpoch(p.getCreationTimeSeconds() * 1000),
-                                Collectors.counting())
-                ));
+    private List<SingleDaySubmission> getSingleDaySubmissions(List<Submission> submissions, int days) {
+        var cgSubByDate = submissions.stream().collect(Collectors.groupingBy(Submission::getDate));
+        var acCountByDate = new HashMap<String, Long>();
+        var totSubCountByDate = new HashMap<String, Long>();
+
+        cgSubByDate.forEach((key, value) -> {
+            var acCount = value.stream().filter(submission -> "OK".equals(submission.getVerdict())).count();
+            var total = value.size();
+            acCountByDate.put(key, acCount);
+            totSubCountByDate.put(key, (long) total);
+        });
+
+        return IntStream.range(0, days)
+                .mapToObj(day -> {
+                    String date = TimeUtil.getStringfromEpoch(TimeUtil.getEpochBeforeNDays(day) * 1000);
+                    return SingleDaySubmission.builder()
+                            .uniqueAcCount(acCountByDate.getOrDefault(date, (long) 0))
+                            .totalSubmission(totSubCountByDate.getOrDefault(date, (long) 0))
+                            .date(date)
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 
-    Map<String, Long> filteredUniqueSubmissionVerdictCount(List<Submission> result, Predicate<Submission> predicate) {
-        return result
-                .stream()
-                .filter(predicate)
-                .collect((Collectors
-                        .groupingBy(p -> TimeUtil.getStringfromEpoch(p.getCreationTimeSeconds() * 1000),
-                                Collectors.collectingAndThen(Collectors.mapping(p -> String.format(
-                                        "%s-%s", p.getProblem().getContestId(), p.getProblem().getIndex()),
-                                        Collectors.toSet()), p -> (long) (p.size()))
-                        )));
-
-
+    private List<Submission> getUserSubmissions(UserSubmissionByDateRequest userSubmissionByDateRequest) {
+        RestApiResponse response = httpUtil.get(getUserInfoFetchURI(userSubmissionByDateRequest), SubmissionList.class);
+        var submissions = ((SubmissionList) response.getResponseBody()).getResult();
+        submissions.forEach(submission -> {
+            var date = TimeUtil.getStringfromEpoch(submission.getCreationTimeSeconds() * 1000);
+            submission.setDate(date);
+            submission.setProblemType(getProblemType(submission));
+        });
+        return submissions;
     }
 
-    String getUserInfoFetchURI(UserSubmissionByDateRequest userSubmissionByDateRequest) {
+    private String getProblemType(Submission submission) {
+        return contestInfoService.getContestTypeById(submission.getContestId()) + "-" + submission.getProblem().getIndex();
+    }
+
+    private String getUserInfoFetchURI(UserSubmissionByDateRequest userSubmissionByDateRequest) {
         return String.format("https://codeforces.com/api/user.status?handle=%s&from=1&count=100",
                 userSubmissionByDateRequest.getHandle());
     }
