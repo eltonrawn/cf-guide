@@ -32,7 +32,7 @@ public class UserService {
     public UserSubmissionByDateResponse getSubmissionByDate(UserSubmissionByDateRequest userSubmissionByDateRequest) {
         List<Submission> submissions = getUserSubmissions(userSubmissionByDateRequest);
         String validity = TimeUtil.getStringfromEpoch(
-                TimeUtil.getEpochBeforeNDays(userSubmissionByDateRequest.getNoOfDays()) * 1000
+                TimeUtil.getEpochBeforeNDays(userSubmissionByDateRequest.getNoOfDays() - 1) * 1000
         );
         submissions = submissions.stream()
                 .filter(submission -> validity.compareTo(submission.getDate()) <= 0)
